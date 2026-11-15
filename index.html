@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jarvis AI</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #121212;
+            color: #ffffff;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            box-sizing: border-box;
+        }
+        #chat-container {
+            flex: 1;
+            overflow-y: auto;
+            border: 1px solid #333;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            background-color: #1e1e1e;
+        }
+        .message {
+            margin-bottom: 12px;
+            line-height: 1.4;
+        }
+        .user {
+            color: #4CAF50;
+        }
+        .jarvis {
+            color: #2196F3;
+        }
+        .input-container {
+            display: flex;
+            gap: 10px;
+        }
+        input[type="text"] {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #444;
+            border-radius: 6px;
+            background-color: #2a2a2a;
+            color: #fff;
+            font-size: 16px;
+        }
+        button {
+            padding: 12px 20px;
+            background-color: #2196F3;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #0b7dda;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>Jarvis AI</h2>
+    <div id="chat-container"></div>
+
+    <div class="input-container">
+        <input type="text" id="user-input" placeholder="Digite sua mensagem..." onkeypress="handleKeyPress(event)">
+        <button onclick="sendMessage()">Enviar</button>
+    </div>
+
+    <script>
+        // Chave da Groq integrada
+        const GROQ_API_KEY = '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'; 
+        const API_URL = 'https://api.groq.com/openai/v1/chat/completions';
+
+        async function sendMessage() {
+            const inputField = document.getElementById('user-input');
+            const chatContainer = document.getElementById('chat-container');
+            const userText = inputField.value.trim();
+
+            if (!userText) return;
+
+            // Mostra a mensagem do usuário
+            chatContainer.innerHTML += `<div class="message user"><b>Você:</b> ${userText}</div>`;
+            inputField.value = '';
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${GROQ_API_KEY}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        model: 'llama3-8b-8192',
+                        messages: [{ role: 'user', content: userText }]
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.choices && data.choices.length > 0) {
+                    const jarvisReply = data.choices[0].message.content;
+                    chatContainer.innerHTML += `<div class="message jarvis"><b>Jarvis:</b> ${jarvisReply}</div>`;
+                } else {
+                    chatContainer.innerHTML += `<div class="message jarvis" style="color: #ff5252;"><b>Jarvis:</b> Erro ao processar resposta. Verifique os dados.</div>`;
+                }
+            } catch (error) {
+                chatContainer.innerHTML += `<div class="message jarvis" style="color: #ff5252;"><b>Jarvis:</b> Erro de conexão.</div>`;
+            }
+
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+    </script>
+</body>
+</html>
